@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Para ti 🌷</title>
+<style>
+:root{box-sizing:border-box;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:#0b0b0f;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+#msg{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 22px);text-align:center;font:italic 22px Georgia,serif;color:#f3c6f5;text-shadow:0 0 14px #d96bde;pointer-events:none;padding:0 16px}
+#hint{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);text-align:center;font:13px system-ui,sans-serif;color:#9a9aa6;pointer-events:none}
+#loader{position:fixed;inset:0;background:#0b0b0f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity 1s}
+#loader svg{filter:drop-shadow(0 0 14px #d96bde)}
+#pct{margin-top:18px;font:14px system-ui,sans-serif;color:#e9a6ee;letter-spacing:2px}
+</style></head><body>
+<div id="loader"><svg viewBox="-4 -4 108 98" width="130"><defs><linearGradient id="hg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2a0f5"/><stop offset="1" stop-color="#c24fd0"/></linearGradient><clipPath id="hc"><rect id="hr" x="-4" y="94" width="108" height="0"/></clipPath></defs><path d="M50 85 C10 55 0 30 0 20 C0 8 10 0 22 0 C34 0 45 8 50 18 C55 8 66 0 78 0 C90 0 100 8 100 20 C100 30 90 55 50 85Z" fill="none" stroke="#e58bea" stroke-width="2.5" stroke-linejoin="round"/><path d="M50 85 C10 55 0 30 0 20 C0 8 10 0 22 0 C34 0 45 8 50 18 C55 8 66 0 78 0 C90 0 100 8 100 20 C100 30 90 55 50 85Z" fill="url(#hg2)" clip-path="url(#hc)"/></svg><div id="pct">0%</div></div>
+<canvas id="c"></canvas>
+<div id="msg">Para mi AMADA, que floreces mi VIDA 🌷</div>
+<div id="hint">toca la pantalla para sembrar más flores</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H,D,stars=[],tulips=[];
+function resize(){D=window.devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=W*D;cv.height=H*D;ctx.setTransform(D,0,0,D,0,0);
+stars=Array.from({length:Math.round(W*H/450)},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+.3,p:Math.random()*6.28,s:Math.random()*1.5+.5}));}
+addEventListener('resize',resize);resize();
+const pinks=[300,310,320,285,330];
+let shots=[],nextShot=0;
+function plant(x,y,big){tulips.push({x,y,h:(big?H*.3:H*(.12+Math.random()*.12)),hue:pinks[Math.floor(Math.random()*pinks.length)],t0:performance.now(),ph:Math.random()*6.28});}
+function startScene(){setTimeout(()=>{plant(W*.5,H*.87,true);},300);
+[[.22,.9],[.78,.9],[.36,.93],[.66,.94],[.1,.95],[.9,.95],[.3,.88],[.7,.88],[.15,.86],[.85,.86],[.45,.96],[.57,.95],[.04,.9],[.96,.9],[.27,.97],[.74,.97]].forEach((p,i)=>setTimeout(()=>plant(W*p[0],H*p[1]),900+i*350));}
+const hr=document.getElementById('hr'),pct=document.getElementById('pct'),ld=document.getElementById('loader'),L0=performance.now();
+function load(t){const p=Math.min(1,(t-L0)/3500);hr.setAttribute('y',94-98*p);hr.setAttribute('height',98*p);pct.textContent=Math.round(p*100)+'%';
+if(p<1)requestAnimationFrame(load);else{ld.style.opacity=0;setTimeout(()=>ld.remove(),1000);startScene();}}
+requestAnimationFrame(load);
+cv.addEventListener('pointerdown',e=>{if(e.clientY>H*.55)plant(e.clientX,Math.min(e.clientY,H*.97));else plant(e.clientX,H*(.84+Math.random()*.1));});
+function ease(t){return 1-Math.pow(1-t,3)}
+function tulip(f,t){
+const g=ease(Math.min(1,(t-f.t0)/2800));if(g<=0)return;
+const sw=Math.sin(t/1200+f.ph)*f.h*.04,H0=f.h*g,x=f.x,y=f.y,tx=x+sw,ty=y-H0;
+ctx.save();ctx.lineCap='round';ctx.shadowColor='#3cff4a';ctx.shadowBlur=18;
+ctx.strokeStyle='#2e9a2e';ctx.lineWidth=Math.max(3,f.h*.045);
+ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x-sw,y-H0*.5,tx,ty);ctx.stroke();
+const lg=ctx.createLinearGradient(0,y-H0*.5,0,y);lg.addColorStop(0,'#3fbf3f');lg.addColorStop(1,'#1f7a1f');ctx.fillStyle=lg;
+const ly=y-H0*.12,L=f.h*.4*g;
+ctx.beginPath();ctx.moveTo(x,ly);ctx.bezierCurveTo(x-L*.6,ly-L*.1,x-L*.9,ly-L*.5,x-L,ly-L*.9);ctx.bezierCurveTo(x-L*.5,ly-L*.8,x-L*.1,ly-L*.4,x,ly);ctx.fill();
+ctx.beginPath();ctx.moveTo(x,ly-H0*.08);ctx.bezierCurveTo(x+L*.4,ly-L*.3,x+L*.8,ly-L*.5,x+L*1.05,ly-L*1.0);ctx.bezierCurveTo(x+L*.6,ly-L*.9,x+L*.2,ly-L*.5,x,ly-H0*.08);ctx.fill();
+ctx.restore();
+const w=f.h*.36*g;ctx.save();ctx.translate(tx,ty);ctx.rotate(sw/f.h*.8);
+ctx.shadowColor='hsl('+f.hue+',90%,70%)';ctx.shadowBlur=34+Math.sin(t/700+f.ph)*10;
+const gr=ctx.createRadialGradient(0,-w*.5,w*.1,0,-w*.5,w);gr.addColorStop(0,'hsl('+f.hue+',80%,78%)');gr.addColorStop(1,'hsl('+f.hue+',70%,58%)');
+ctx.fillStyle=gr;ctx.lineJoin='round';
+ctx.beginPath();ctx.moveTo(0,0);
+ctx.bezierCurveTo(-w*.75,-w*.1,-w*.7,-w*.8,-w*.5,-w*1.1);ctx.lineTo(-w*.2,-w*.75);ctx.lineTo(0,-w*1.1);ctx.lineTo(w*.2,-w*.75);ctx.lineTo(w*.5,-w*1.1);
+ctx.bezierCurveTo(w*.7,-w*.8,w*.75,-w*.1,0,0);ctx.closePath();ctx.fill();ctx.fill();
+ctx.restore();
+}
+function frame(t){
+ctx.clearRect(0,0,W,H);
+const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0a0a12');bg.addColorStop(1,'#1b1b24');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+for(const s of stars){const a=.35+.65*Math.abs(Math.sin(t/1000*s.s+s.p));ctx.fillStyle='rgba(235,225,90,'+a+')';ctx.fillRect(s.x,s.y,s.r,s.r);}
+if(t>nextShot){shots.push({x:W*(.3+Math.random()*.8),y:Math.random()*H*.4,vx:-(400+Math.random()*300),vy:250+Math.random()*200,t0:t});nextShot=t+2500+Math.random()*3500;}
+shots=shots.filter(s=>t-s.t0<900);
+for(const s of shots){const k=(t-s.t0)/1000,x=s.x+s.vx*k,y=s.y+s.vy*k,a=1-(t-s.t0)/900,tx=x-s.vx*.15,ty=y-s.vy*.15;
+const sg=ctx.createLinearGradient(x,y,tx,ty);sg.addColorStop(0,'rgba(255,255,230,'+a+')');sg.addColorStop(1,'rgba(255,255,230,0)');
+ctx.strokeStyle=sg;ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();
+ctx.fillStyle='rgba(255,255,240,'+a+')';ctx.beginPath();ctx.arc(x,y,1.6,0,6.283);ctx.fill();}
+const mr=Math.min(W,H)*.09,mx=W*.82,my=H*.17;
+const mg=ctx.createRadialGradient(mx,my,mr*.8,mx,my,mr*3);mg.addColorStop(0,'rgba(220,220,235,.35)');mg.addColorStop(1,'rgba(220,220,235,0)');ctx.fillStyle=mg;ctx.fillRect(mx-mr*3,my-mr*3,mr*6,mr*6);
+ctx.fillStyle='#c9c9d2';ctx.beginPath();ctx.arc(mx,my,mr,0,6.283);ctx.fill();
+ctx.fillStyle='rgba(150,150,165,.5)';[[-.3,-.2,.18],[.25,.15,.14],[-.1,.35,.1]].forEach(c=>{ctx.beginPath();ctx.arc(mx+c[0]*mr,my+c[1]*mr,c[2]*mr,0,6.283);ctx.fill();});
+ctx.fillStyle='rgba(110,110,130,.4)';ctx.font='italic '+(mr*.3)+'px Georgia,serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('t amo',mx,my);
+const hg=ctx.createLinearGradient(0,H*.82,0,H);hg.addColorStop(0,'#7fd69a');hg.addColorStop(1,'#4aa570');ctx.fillStyle=hg;
+ctx.beginPath();ctx.ellipse(W/2,H*1.08,W*.85,H*.26,0,0,6.283);ctx.fill();
+[...tulips].sort((a,b)=>a.y-b.y).forEach(f=>tulip(f,t));
+requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+</script></body></html>
