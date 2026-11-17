@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Para ti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --noche-alta: #0b0c2a;
+    --noche-baja: #1c1946;
+    --atardecer-ambar: #f2915a;
+    --atardecer-rosa: #d65a82;
+    --tinta: #efe6ff;
+    --colina: #0e2620;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: linear-gradient(to bottom, var(--noche-alta), var(--noche-baja));
+    color: var(--tinta);
+    font-family: "Kalam", "Segoe Print", "Bradley Hand", cursive;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Cielo */
+  #estrellas { position: fixed; inset: 0; width: 100%; height: 100%; }
+
+  .atardecer {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(120% 70% at 50% 108%, var(--atardecer-ambar) 0%, var(--atardecer-rosa) 32%, rgba(120, 60, 140, 0) 70%);
+    opacity: 0;
+    transition: opacity 7s ease-in-out;
+    pointer-events: none;
+  }
+  body.dusk .atardecer { opacity: 0.9; }
+
+  .luna {
+    position: fixed; top: 7vh; right: 8vw;
+    width: 46px; height: 46px; border-radius: 50%;
+    box-shadow: inset -13px 4px 0 0 #f6efd8;
+    filter: drop-shadow(0 0 14px rgba(246, 239, 216, 0.45));
+    transform: rotate(-18deg);
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
+  /* Colina y tulipanes */
+  .colina { position: fixed; left: 0; right: 0; bottom: 0; width: 100%; height: 17vh; min-height: 90px; display: block; pointer-events: none; }
+  .colina path { fill: var(--colina); }
+
+  .tulipan {
+    position: fixed; bottom: calc(max(17vh, 90px) - 26px); right: 14vw;
+    width: clamp(54px, 9vw, 84px); overflow: visible;
+    pointer-events: none;
+  }
+  .tulipan .tallo { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(0); transition: transform 2.2s cubic-bezier(.3,.7,.2,1); }
+  .tulipan .flor  { transform-box: fill-box; transform-origin: 50% 100%; transform: scale(0); transition: transform 2.6s cubic-bezier(.3,.9,.3,1.15) 1.6s; filter: drop-shadow(0 0 10px var(--brillo, rgba(255, 111, 165, .75))); }
+  .tulipan .lado   { fill: var(--p1, #ff6fa5); }
+  .tulipan .centro { fill: var(--p2, #ff93c0); }
+  body.bloom .tulipan .tallo,
+  body.bloom .tulipan .flor,
+  .tulipan.crece .tallo,
+  .tulipan.crece .flor { transform: none; }
+
+  /*  */
+  .tulipan.extra { right: auto; }
+  .tulipan.extra .tallo { transition-duration: 1.4s; }
+  .tulipan.extra .flor  { transition-duration: 1.6s; transition-delay: .8s; }
+
+  /* Fuegos artificiales */
+  #fuegos { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 6; pointer-events: none; }
+
+  /* Portada: una sola estrella */
+  .portada {
+    position: fixed; inset: 0; z-index: 5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.6rem;
+    transition: opacity 1.6s ease;
+  }
+  .portada.fuera { opacity: 0; pointer-events: none; }
+
+  .estrella {
+    width: 22px; height: 22px; border: 0; cursor: pointer;
+    background: #fff7de;
+    clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+    filter: drop-shadow(0 0 10px #ffe9a8) drop-shadow(0 0 26px rgba(255, 233, 168, .7));
+    animation: latido 2.8s ease-in-out infinite;
+  }
+  .estrella:focus-visible { outline: 2px solid var(--tinta); outline-offset: 12px; }
+  @keyframes latido { 0%, 100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.35); opacity: 1; } }
+
+  .portada p { font-weight: 300; font-size: 1.05rem; opacity: .75; }
+
+  /* Poema */
+  main {
+    position: fixed; inset: 0; z-index: 3;
+    display: flex; align-items: center; justify-content: center;
+    padding: 6vh 1.6rem calc(max(17vh, 90px) + 2vh);
+    overflow-y: auto;
+  }
+  .poema { width: 100%; max-width: 34rem; margin: auto 0; }
+
+  .poema h1 {
+    font-weight: 400;
+    font-size: clamp(2.1rem, 7vw, 3.1rem);
+    line-height: 1.15;
+    margin-bottom: 1.6rem;
+    text-shadow: 0 0 24px rgba(255, 190, 220, .35);
+  }
+
+  .estrofa { margin-bottom: 2.1rem; }
+  .estrofa p {
+    font-weight: 300;
+    font-size: clamp(1.15rem, 3.6vw, 1.42rem);
+    line-height: 1.75;
+    min-height: 1.75em;
+    text-shadow: 0 1px 14px rgba(8, 8, 30, .7);
+  }
+  .estrofa p + p { margin-top: .35rem; }
+
+  .caret {
+    display: inline-block; width: 2px; height: 1.1em; margin-left: 3px;
+    background: #ff6fa5; vertical-align: -0.15em;
+    animation: parpadeo 1s steps(1) infinite;
+  }
+  @keyframes parpadeo { 50% { opacity: 0; } }
+
+  .final { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
+  .final.ver { opacity: 1; pointer-events: auto; }
+  .pista { font-weight: 300; font-size: .98rem; opacity: .6; }
+  .otra-vez {
+    background: none; border: 0; color: var(--tinta); font: inherit; font-weight: 300;
+    font-size: 1rem; opacity: .6; cursor: pointer; text-decoration: underline; text-underline-offset: 4px;
+  }
+  .otra-vez:hover, .otra-vez:focus-visible { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .estrella { animation: none; }
+    .atardecer, .portada, .final { transition: none; }
+    .tulipan .tallo, .tulipan .flor { transition: none; }
+    .caret { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="estrellas" aria-hidden="true"></canvas>
+<div class="atardecer" aria-hidden="true"></div>
+<div class="luna" aria-hidden="true"></div>
+
+<svg class="colina" id="colina" viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true">
+  <defs><path id="curva" d="M0 46 C70 18 150 22 230 40 C300 56 350 34 400 26"/></defs>
+  <path d="M0 46 C70 18 150 22 230 40 C300 56 350 34 400 26 L400 100 L0 100 Z"/>
+</svg>
+
+<svg class="tulipan" id="tulipan-base" viewBox="0 0 100 160" aria-hidden="true">
+  <g class="tallo">
+    <path d="M50 158 C50 124 47 100 50 72" stroke="#3f9b5a" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M50 134 C30 129 21 112 19 98 C38 102 48 116 50 134Z" fill="#3f9b5a"/>
+    <path d="M50 122 C68 118 79 102 81 89 C62 93 52 106 50 122Z" fill="#378a50"/>
+  </g>
+  <g class="flor">
+    <path class="lado" d="M50 76 C29 74 27 46 33 30 C42 38 46 41 50 50Z"/>
+    <path class="lado" d="M50 76 C71 74 73 46 67 30 C58 38 54 41 50 50Z"/>
+    <path class="centro" d="M50 78 C37 67 39 38 50 20 C61 38 63 67 50 78Z"/>
+  </g>
+</svg>
+
+<canvas id="fuegos" aria-hidden="true"></canvas>
+
+<div class="portada" id="portada">
+  <button class="estrella" id="estrella" aria-label="Abrir el mensaje"></button>
+  <p>Toca la estrella</p>
+</div>
+
+<main>
+  <article class="poema" id="poema" aria-live="polite"></article>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- El poema ---------- */
+  var titulo = "¡Hola, amada mía!";
+
+  var estrofas = [
+    [
+      "Quería decirte que cada vez que te veo o hablo contigo me lleno de alegría.",
+      "Siempre te estoy extrañando y pensando en ti, pero no puedo dejar de hacerlo, y tampoco lo haría."
+    ],
+    [
+      { t: "Estás viendo este mensaje con esos lindos ojos como el atardecer.", dusk: "atardecer" },
+      "Siento que te amo tanto que a veces no sé qué hacer,",
+      "y lo voy a seguir sintiendo hasta el día de fallecer."
+    ]
+  ];
+
+  /* ---------- Utilidades ---------- */
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var saltar = reduce;
+  var corriendo = false;
+  var empezado = false;
+  var body = document.body;
+  var poema = document.getElementById("poema");
+  var portada = document.getElementById("portada");
+  var W = window.innerWidth, H = window.innerHeight;
+
+  function dormir(ms) {
+    return new Promise(function (ok) { setTimeout(ok, saltar ? 0 : ms); });
+  }
+
+  function crearLinea(contenedor, tag) {
+    var el = document.createElement(tag);
+    var t = document.createElement("span");
+    var c = document.createElement("span");
+    c.className = "caret";
+    el.appendChild(t);
+    el.appendChild(c);
+    contenedor.appendChild(el);
+    return { el: el, t: t, caret: c };
+  }
+
+  async function escribir(linea, texto, opts) {
+    opts = opts || {};
+    var velocidad = opts.velocidad || 46;
+    for (var i = 0; i < texto.length; i++) {
+      if (saltar) {
+        linea.t.textContent = texto;
+        if (opts.dusk) body.classList.add("dusk");
+        break;
+      }
+      linea.t.textContent = texto.slice(0, i + 1);
+      if (opts.dusk && linea.t.textContent.indexOf(opts.dusk) !== -1) body.classList.add("dusk");
+      var c = texto[i];
+      await dormir(velocidad + (c === "," ? 260 : c === "." ? 380 : 0));
+    }
+    linea.caret.remove();
+  }
+
+  /* ---------- Secuencia del poema ---------- */
+  async function leer() {
+    if (corriendo) return;
+    corriendo = true;
+    poema.innerHTML = "";
+    body.classList.remove("dusk", "bloom");
+
+    var h1 = crearLinea(poema, "h1");
+    await escribir(h1, titulo, { velocidad: 90 });
+    await dormir(900);
+
+    for (var e = 0; e < estrofas.length; e++) {
+      var cont = document.createElement("div");
+      cont.className = "estrofa";
+      poema.appendChild(cont);
+
+      for (var l = 0; l < estrofas[e].length; l++) {
+        var item = estrofas[e][l];
+        var texto = typeof item === "string" ? item : item.t;
+        var dusk = typeof item === "string" ? null : item.dusk;
+        var linea = crearLinea(cont, "p");
+        await escribir(linea, texto, { dusk: dusk });
+        await dormir(700);
+      }
+      await dormir(1300);
+    }
+
+    await dormir(600);
+    body.classList.add("bloom");
+
+    var fin = document.createElement("div");
+    fin.className = "final";
+    var pista = document.createElement("p");
+    pista.className = "pista";
+    pista.textContent = "";
+    var otra = document.createElement("button");
+    otra.className = "otra-vez";
+    otra.textContent = "Leer otra vez";
+    otra.addEventListener("click", function () {
+      corriendo = false;
+      leer();
+    });
+    fin.appendChild(pista);
+    fin.appendChild(otra);
+    poema.appendChild(fin);
+    await dormir(3500);
+    fin.classList.add("ver");
+    corriendo = false;
+  }
+
+  /* ---------- Estrellas y estrellas fugaces ---------- */
+  var canvas = document.getElementById("estrellas");
+  var ctx = canvas.getContext("2d");
+  var estrellas = [];
+  var fugaces = [];
+  var proximaFugaz = performance.now() + 4000;
+  var dpr = 1;
+
+  function ajustarCanvas(c, cx) {
+    c.width = W * dpr;
+    c.height = H * dpr;
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function ajustar() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    ajustarCanvas(canvas, ctx);
+    ajustarCanvas(fcanvas, fctx);
+    var n = Math.round((W * H) / 5500);
+    estrellas = [];
+    for (var i = 0; i < n; i++) {
+      estrellas.push({
+        x: Math.random() * W,
+        y: Math.random() * H * 0.85,
+        r: Math.random() * 1.2 + 0.25,
+        fase: Math.random() * Math.PI * 2,
+        vel: Math.random() * 0.0013 + 0.0004
+      });
+    }
+  }
+
+  function lanzarFugaz(x, y) {
+    var dir = Math.random() < 0.5 ? 1 : -1;
+    fugaces.push({ x: x, y: y, vx: dir * (6 + Math.random() * 3), vy: 2.5 + Math.random() * 2.5, vida: 0 });
+  }
+
+  function dibujar(ahora) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+    for (var i = 0; i < estrellas.length; i++) {
+      var s = estrellas[i];
+      ctx.globalAlpha = 0.45 + 0.45 * Math.sin(ahora * s.vel + s.fase);
+      ctx.fillStyle = "#fff6e0";
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (!reduce) {
+      if (ahora > proximaFugaz) {
+        lanzarFugaz(Math.random() * W * 0.7 + W * 0.2, Math.random() * H * 0.25);
+        proximaFugaz = ahora + 6000 + Math.random() * 5000;
+      }
+      for (var j = fugaces.length - 1; j >= 0; j--) {
+        var f = fugaces[j];
+        f.x += f.vx; f.y += f.vy; f.vida++;
+        var alfa = Math.max(0, 1 - f.vida / 46);
+        var g = ctx.createLinearGradient(f.x, f.y, f.x - f.vx * 9, f.y - f.vy * 9);
+        g.addColorStop(0, "rgba(255,246,224," + alfa + ")");
+        g.addColorStop(1, "rgba(255,246,224,0)");
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = g;
+        ctx.lineWidth = 1.8;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(f.x, f.y);
+        ctx.lineTo(f.x - f.vx * 9, f.y - f.vy * 9);
+        ctx.stroke();
+        if (f.vida > 46) fugaces.splice(j, 1);
+      }
+      requestAnimationFrame(dibujar);
+    }
+  }
+
+  /* ---------- Fuegos artificiales ---------- */
+  var fcanvas = document.getElementById("fuegos");
+  var fctx = fcanvas.getContext("2d");
+  var cohetes = [];
+  var chispas = [];
+  var fwActivo = false;
+  var coloresFw = ["#ff6fa5", "#ffd36b", "#c78bff", "#ff8f6b", "#fff3c4", "#7fd6ff"];
+
+  function colorFw() { return coloresFw[Math.floor(Math.random() * coloresFw.length)]; }
+
+  function lanzarCohete(x, objetivo) {
+    cohetes.push({ x: x, y: H + 10, vy: -(9 + Math.random() * 2.5), obj: objetivo, color: colorFw() });
+    iniciarFw();
+  }
+
+  function explotar(x, y, color) {
+    var n = 90;
+    var anillo = Math.random() < 0.45;
+    for (var i = 0; i < n; i++) {
+      var ang = (i / n) * Math.PI * 2;
+      var vel = anillo ? 4.2 : Math.random() * 5 + 1;
+      chispas.push({
+        x: x, y: y,
+        vx: Math.cos(ang) * vel, vy: Math.sin(ang) * vel,
+        vida: 1, dec: 0.011 + Math.random() * 0.012,
+        color: color, r: 1.4 + Math.random() * 1.3
+      });
+    }
+    iniciarFw();
+  }
+
+  function iniciarFw() {
+    if (!fwActivo) { fwActivo = true; requestAnimationFrame(bucleFw); }
+  }
+
+  function bucleFw() {
+    fctx.globalCompositeOperation = "destination-out";
+    fctx.fillStyle = "rgba(0,0,0,0.22)";
+    fctx.fillRect(0, 0, W, H);
+    fctx.globalCompositeOperation = "lighter";
+
+    for (var i = cohetes.length - 1; i >= 0; i--) {
+      var c = cohetes[i];
+      c.y += c.vy;
+      fctx.globalAlpha = 1;
+      fctx.fillStyle = "#fff3c4";
+      fctx.beginPath();
+      fctx.arc(c.x, c.y, 2, 0, Math.PI * 2);
+      fctx.fill();
+      if (c.y <= c.obj) { explotar(c.x, c.y, c.color); cohetes.splice(i, 1); }
+    }
+
+    for (var j = chispas.length - 1; j >= 0; j--) {
+      var p = chispas[j];
+      p.vx *= 0.985;
+      p.vy = p.vy * 0.985 + 0.05;
+      p.x += p.vx; p.y += p.vy;
+      p.vida -= p.dec;
+      if (p.vida <= 0) { chispas.splice(j, 1); continue; }
+      fctx.globalAlpha = p.vida;
+      fctx.fillStyle = p.color;
+      fctx.beginPath();
+      fctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      fctx.fill();
+    }
+
+    if (cohetes.length || chispas.length) {
+      requestAnimationFrame(bucleFw);
+    } else {
+      fctx.globalCompositeOperation = "source-over";
+      fctx.clearRect(0, 0, W, H);
+      fwActivo = false;
+    }
+  }
+
+  function secuenciaFuegos() {
+    var r = document.getElementById("estrella").getBoundingClientRect();
+    explotar(r.left + r.width / 2, r.top + r.height / 2, "#fff3c4");
+    [300, 750, 1200, 1650, 2100, 2550].forEach(function (ms) {
+      setTimeout(function () {
+        lanzarCohete(W * (0.12 + Math.random() * 0.76), H * (0.1 + Math.random() * 0.3));
+      }, ms);
+    });
+    setTimeout(function () {
+      [0.28, 0.5, 0.72].forEach(function (fx, k) {
+        setTimeout(function () { lanzarCohete(W * fx, H * 0.22); }, k * 120);
+      });
+    }, 3000);
+  }
+
+  /* ---------- Tulipanes en la colina ---------- */
+  var curva = document.getElementById("curva");
+  var colina = document.getElementById("colina");
+  var base = document.getElementById("tulipan-base");
+  var muestras = [];
+  var sembrados = [];
+  var paletas = [
+    { p1: "#ff6fa5", p2: "#ff93c0", brillo: "rgba(255,111,165,.75)" },
+    { p1: "#ff8f6b", p2: "#ffb48f", brillo: "rgba(255,143,107,.7)" },
+    { p1: "#c78bff", p2: "#dcb4ff", brillo: "rgba(199,139,255,.7)" },
+    { p1: "#ffd36b", p2: "#ffe39a", brillo: "rgba(255,211,107,.7)" },
+    { p1: "#ff5b7f", p2: "#ff8aa3", brillo: "rgba(255,91,127,.7)" }
+  ];
+
+  (function muestrear() {
+    var largo = curva.getTotalLength();
+    for (var i = 0; i <= 240; i++) {
+      var pt = curva.getPointAtLength((largo * i) / 240);
+      muestras.push({ x: pt.x, y: pt.y });
+    }
+  })();
+
+  function alturaColina(xFrac) {
+    var x = xFrac * 400, mejor = muestras[0], d = Infinity;
+    for (var i = 0; i < muestras.length; i++) {
+      var dx = Math.abs(muestras[i].x - x);
+      if (dx < d) { d = dx; mejor = muestras[i]; }
+    }
+    return mejor.y; // en unidades del viewBox (0 arriba, 100 abajo)
+  }
+
+  function sembrar(x) {
+    var Hh = colina.getBoundingClientRect().height;
+    var sy = alturaColina(x / W);
+    var ancho = 38 + Math.random() * 34;
+    var abajo = Hh * (1 - sy / 100) - 8;
+    var pal = paletas[Math.floor(Math.random() * paletas.length)];
+
+    var t = base.cloneNode(true);
+    t.removeAttribute("id");
+    t.classList.add("extra");
+    t.style.width = ancho + "px";
+    t.style.left = (x - ancho / 2) + "px";
+    t.style.bottom = abajo + "px";
+    t.style.setProperty("--p1", pal.p1);
+    t.style.setProperty("--p2", pal.p2);
+    t.style.setProperty("--brillo", pal.brillo);
+    body.appendChild(t);
+    sembrados.push(t);
+    if (sembrados.length > 70) sembrados.shift().remove();
+
+    if (reduce) { t.classList.add("crece"); return; }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { t.classList.add("crece"); });
+    });
+  }
+
+  /* ---------- Toques: colina = tulipán, cielo = estrella fugaz ---------- */
+  document.addEventListener("pointerdown", function (e) {
+    if (!empezado) return;
+    if (e.target.closest && e.target.closest("button")) return;
+    var Hh = colina.getBoundingClientRect().height;
+    var superficie = (H - Hh) + (Hh * alturaColina(e.clientX / W)) / 100;
+    if (e.clientY >= superficie - 6) {
+      sembrar(e.clientX);
+    } else if (!reduce) {
+      lanzarFugaz(e.clientX, e.clientY);
+    }
+  });
+
+  /* ---------- Arranque ---------- */
+  document.getElementById("estrella").addEventListener("click", function () {
+    if (empezado) return;
+    empezado = true;
+    portada.classList.add("fuera");
+    if (reduce) { leer(); return; }
+    secuenciaFuegos();
+    setTimeout(leer, 4800);
+  });
+
+  window.addEventListener("resize", function () { ajustar(); if (reduce) dibujar(0); });
+  ajustar();
+  requestAnimationFrame(dibujar);
+})();
+</script>
+</body>
+</html>
