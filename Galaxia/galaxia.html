@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Para ti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Parisienne&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --vacio: #070816;
+    --violeta: #3b2a6b;
+    --rosa: #e0709f;
+    --celeste: #7fd6e6;
+    --luz: #f3efe6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--vacio); }
+  body {
+    background:
+      radial-gradient(60% 40% at 22% 18%, rgba(224,112,159,.26), transparent 70%),
+      radial-gradient(55% 45% at 82% 34%, rgba(86,70,190,.38), transparent 70%),
+      var(--vacio);
+    color: var(--luz);
+    font-family: "Caveat", "Segoe Print", "Bradley Hand", cursive;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  canvas#cielo { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .pista {
+    position: fixed;
+    top: max(18px, env(safe-area-inset-top));
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 1.35rem;
+    color: rgba(243,239,230,.7);
+    pointer-events: none;
+    transition: opacity 1s ease;
+  }
+  .pista.oculta { opacity: 0; }
+
+  /* "te amo" */
+  .te-amo {
+    position: fixed;
+    left: 50%; top: 30%;
+    transform: translate(-50%, -50%);
+    font-family: "Parisienne", "Snell Roundhand", "Brush Script MT", cursive;
+    font-size: clamp(4.2rem, 24vw, 9rem);
+    line-height: 1.2;
+    padding: 0 .2em;
+    white-space: nowrap;
+    color: #fff;
+    text-shadow: 0 0 18px rgba(224,112,159,.9), 0 0 48px rgba(127,214,230,.55);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+    clip-path: inset(-30% 100% -30% 0);
+  }
+  .te-amo.escribe {
+    opacity: 1;
+    animation: escribir 1.7s cubic-bezier(.45,.1,.3,1) forwards;
+  }
+  .te-amo.se-va {
+    opacity: 0;
+    clip-path: inset(-30% 0 -30% 0);
+    transition: opacity 1.4s ease;
+  }
+  @keyframes escribir {
+    from { clip-path: inset(-30% 100% -30% 0); }
+    to   { clip-path: inset(-30% 0% -30% 0); }
+  }
+
+  /* mariposa */
+  #mariposa {
+    position: fixed; left: 0; top: 0;
+    width: 116px; height: 96px;
+    display: grid; place-items: center;
+    background: none; border: 0; cursor: pointer;
+    z-index: 3;
+    will-change: transform;
+    filter: drop-shadow(0 0 14px rgba(224,112,159,.65));
+  }
+  #mariposa:focus-visible { outline: 2px solid var(--celeste); outline-offset: -6px; border-radius: 50%; }
+  #mariposa svg { width: 86px; height: 69px; overflow: visible; }
+  .ala { transform-box: view-box; transform-origin: 50px 40px; animation: aleteo .42s ease-in-out infinite alternate; }
+  @keyframes aleteo { from { transform: scaleX(1); } to { transform: scaleX(.22); } }
+
+  /* poema */
+  .poema {
+    position: fixed;
+    left: 0; right: 0;
+    bottom: max(26px, env(safe-area-inset-bottom));
+    padding: 0 24px;
+    text-align: center;
+    pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    gap: .6rem;
+    z-index: 1;
+  }
+  .estrofa {
+    font-size: calc(clamp(1.6rem, 6.2vw, 2.1rem) * var(--esc, 1));
+    line-height: 1.28;
+    max-width: 40ch;
+    text-shadow: 0 1px 14px rgba(7,8,22,.95), 0 0 6px rgba(7,8,22,.8);
+  }
+  .estrofa.titulo { font-weight: 700; font-size: calc(clamp(2.2rem, 9.5vw, 3.1rem) * var(--esc, 1)); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ala { animation: none; }
+    .te-amo.escribe { animation: none; clip-path: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="cielo"></canvas>
+
+<p class="pista" id="pista">toca la mariposa</p>
+
+<div class="te-amo" id="teAmo" aria-live="polite">te amo</div>
+
+<button id="mariposa" aria-label="Toca la mariposa">
+  <svg viewBox="0 0 100 80" aria-hidden="true">
+    <defs>
+      <linearGradient id="alaGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f08fb4"/>
+        <stop offset=".6" stop-color="#a06ad8"/>
+        <stop offset="1" stop-color="#7fd6e6"/>
+      </linearGradient>
+    </defs>
+    <g transform="translate(100,0) scale(-1,1)">
+      <g class="ala">
+        <path d="M50,40 C60,5 95,2 92,28 C90,42 70,48 50,42 Z" fill="url(#alaGrad)" opacity=".95"/>
+        <path d="M50,42 C70,46 88,54 80,70 C72,80 56,68 50,46 Z" fill="url(#alaGrad)" opacity=".85"/>
+      </g>
+    </g>
+    <g class="ala">
+      <path d="M50,40 C60,5 95,2 92,28 C90,42 70,48 50,42 Z" fill="url(#alaGrad)" opacity=".95"/>
+      <path d="M50,42 C70,46 88,54 80,70 C72,80 56,68 50,46 Z" fill="url(#alaGrad)" opacity=".85"/>
+    </g>
+    <ellipse cx="50" cy="42" rx="2.6" ry="14" fill="#f3efe6"/>
+    <path d="M49,29 C45,18 40,14 36,12 M51,29 C55,18 60,14 64,12" stroke="#f3efe6" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  </svg>
+</button>
+
+<div class="poema" id="poema" aria-live="polite"></div>
+
+<script>
+(() => {
+  const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ------------------------------------------------------------------
+     EL POEMA: cambia aquí el texto. Cada bloque es una estrofa.
+  ------------------------------------------------------------------ */
+  const estrofas = [
+    { titulo: true, lineas: ["Hola, amada mía"] },
+    { lineas: [
+      "Eres aquella mujer que con solo verte lloro de alegría,",
+      "la que alumbra mis pesadillas en el pasar de los días,",
+      "la que sin cansancio siempre miraría y amaría."
+    ]},
+    { lineas: [
+      "A veces me decías que no te gustaba tu cuerpo,",
+      "sin darte cuenta de que eras una diosa.",
+      "Todo lo que te pones te hace ver hermosa;",
+      "eres un ángel caído del cielo,",
+      "en todo sentido perfecta, con una cara armoniosa."
+    ]},
+    { lineas: [
+      "Eres la persona más valiosa,",
+      "por la que haría cualquier cosa."
+    ]}
+  ];
+
+  /* ---------- cielo (estrellas, estrellas fugaces, chispas) ---------- */
+  const cv = document.getElementById('cielo');
+  const cx = cv.getContext('2d');
+  let W, H, dpr, estrellas = [], fugaces = [], chispas = [];
+
+  function medir() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.round((W * H) / 4200);
+    estrellas = Array.from({ length: n }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H * 0.9,
+      r: Math.random() * 1.3 + 0.3,
+      f: Math.random() * 6.28,
+      v: Math.random() * 1.4 + 0.4,
+      c: Math.random() < 0.18 ? '#f4b6cf' : (Math.random() < 0.22 ? '#a9e6f0' : '#f3efe6')
+    }));
+  }
+  addEventListener('resize', medir);
+  medir();
+
+  function nuevaFugaz(x, y) {
+    const ang = Math.PI * (0.72 + Math.random() * 0.1);
+    const vel = 9 + Math.random() * 4;
+    fugaces.push({ x, y, vx: Math.cos(ang) * vel, vy: Math.sin(ang) * vel * -1 * -1, vida: 1 });
+  }
+  function chisporroteo(x, y) {
+    for (let i = 0; i < 36; i++) {
+      const a = Math.random() * 6.28, s = Math.random() * 3.2 + 0.6;
+      chispas.push({
+        x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+        vida: 1, r: Math.random() * 2 + 0.8,
+        c: Math.random() < 0.5 ? '224,112,159' : '127,214,230'
+      });
+    }
+  }
+
+  /* ---------- galaxia espiral (se dibuja una vez y gira despacio) ---------- */
+  const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
+  const galaxia = (() => {
+    const S = 900, R = S * 0.46;
+    const g = document.createElement('canvas');
+    g.width = g.height = S;
+    const c = g.getContext('2d');
+    c.translate(S / 2, S / 2);
+
+    const halo = c.createRadialGradient(0, 0, 0, 0, 0, S / 2);
+    halo.addColorStop(0, 'rgba(255,236,200,.95)');
+    halo.addColorStop(.10, 'rgba(255,190,150,.50)');
+    halo.addColorStop(.35, 'rgba(176,110,220,.20)');
+    halo.addColorStop(.70, 'rgba(70,90,200,.07)');
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = halo;
+    c.fillRect(-S / 2, -S / 2, S, S);
+
+    const brazos = 2, N = 16000;
+    for (let i = 0; i < N; i++) {
+      const arm = i % brazos;
+      const t = Math.pow(Math.random(), 0.85);
+      const r = t * R;
+      const ang = arm * Math.PI * 2 / brazos + t * 5.4 + gauss() * (0.16 + (1 - t) * 0.5);
+      const x = Math.cos(ang) * r + gauss() * 5;
+      const y = Math.sin(ang) * r + gauss() * 5;
+      const col = t < .22 ? '255,228,184' : t < .55 ? '244,150,190' : '135,175,255';
+      c.fillStyle = `rgba(${col},${(Math.random() * .6 + .15).toFixed(2)})`;
+      const d = Math.random() * 1.3 + .5;
+      c.fillRect(x, y, d, d);
+    }
+    for (let i = 0; i < 3500; i++) {
+      const x = gauss() * R * .13, y = gauss() * R * .13;
+      c.fillStyle = `rgba(255,240,215,${(Math.random() * .7 + .2).toFixed(2)})`;
+      c.fillRect(x, y, 1.2, 1.2);
+    }
+    return g;
+  })();
+
+  let tAmbiente = performance.now() + 9000;
+  function pintar(t) {
+    cx.clearRect(0, 0, W, H);
+
+    cx.save();
+    cx.translate(W / 2, H * 0.4);
+    cx.scale(1, 0.62);
+    cx.rotate(sinMovimiento ? 0 : t * 0.000017);
+    const D = Math.max(W * 1.8, 620);
+    cx.drawImage(galaxia, -D / 2, -D / 2, D, D);
+    cx.restore();
+
+    for (const s of estrellas) {
+      const a = sinMovimiento ? 0.8 : 0.45 + 0.55 * Math.sin(t * 0.001 * s.v + s.f);
+      cx.globalAlpha = Math.max(0.1, a);
+      cx.fillStyle = s.c;
+      cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.28); cx.fill();
+    }
+    cx.globalAlpha = 1;
+
+    if (!sinMovimiento && t > tAmbiente) {
+      nuevaFugaz(Math.random() * W * 0.8 + W * 0.2, Math.random() * H * 0.25);
+      tAmbiente = t + 9000 + Math.random() * 6000;
+    }
+
+    for (let i = fugaces.length - 1; i >= 0; i--) {
+      const f = fugaces[i];
+      f.x += f.vx; f.y += Math.abs(f.vy) * 0.55; f.vida -= 0.012;
+      if (f.vida <= 0) { fugaces.splice(i, 1); continue; }
+      const cola = 110;
+      const mag = Math.hypot(f.vx, Math.abs(f.vy) * 0.55);
+      const tx = f.x - (f.vx / mag) * cola, ty = f.y - (Math.abs(f.vy) * 0.55 / mag) * cola;
+      const g = cx.createLinearGradient(f.x, f.y, tx, ty);
+      g.addColorStop(0, `rgba(255,255,255,${f.vida})`);
+      g.addColorStop(1, 'rgba(127,214,230,0)');
+      cx.strokeStyle = g; cx.lineWidth = 2; cx.lineCap = 'round';
+      cx.beginPath(); cx.moveTo(f.x, f.y); cx.lineTo(tx, ty); cx.stroke();
+    }
+
+    for (let i = chispas.length - 1; i >= 0; i--) {
+      const p = chispas[i];
+      p.x += p.vx; p.y += p.vy; p.vx *= 0.97; p.vy *= 0.97; p.vida -= 0.018;
+      if (p.vida <= 0) { chispas.splice(i, 1); continue; }
+      cx.fillStyle = `rgba(${p.c},${p.vida})`;
+      cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 6.28); cx.fill();
+    }
+  }
+
+  /* ---------- mariposa ---------- */
+  const bf = document.getElementById('mariposa');
+  let bx = W / 2, by = H * 0.32, bxAnterior = bx;
+
+  function moverMariposa(t) {
+    if (sinMovimiento) {
+      bx = W / 2; by = H * 0.4;
+    } else {
+      bx = W / 2 + Math.sin(t * 0.00070) * W * 0.30 + Math.sin(t * 0.00170) * W * 0.06;
+      by = H * 0.36 + Math.sin(t * 0.00090 + 1) * H * 0.12 + Math.sin(t * 0.0026) * 10;
+    }
+    const inclina = Math.max(-18, Math.min(18, (bx - bxAnterior) * 4));
+    bxAnterior = bx;
+    bf.style.transform = `translate(${bx - 58}px, ${by - 48}px) rotate(${inclina}deg)`;
+  }
+
+  /* ---------- "te amo" ---------- */
+  const teAmo = document.getElementById('teAmo');
+  const pista = document.getElementById('pista');
+  let temporizador;
+
+  let poemaIniciado = false;
+  function mostrarTeAmo() {
+    pista.classList.add('oculta');
+    chisporroteo(bx, by);
+    clearTimeout(temporizador);
+    teAmo.classList.remove('escribe', 'se-va');
+    void teAmo.offsetWidth; // reinicia la animación
+    teAmo.classList.add('escribe');
+    temporizador = setTimeout(() => {
+      teAmo.classList.add('se-va');
+      setTimeout(() => teAmo.classList.remove('escribe', 'se-va'), 1500);
+      if (!poemaIniciado) {
+        poemaIniciado = true;
+        setTimeout(escribirPoema, 1200);
+      }
+    }, 4800);
+  }
+  bf.addEventListener('click', (e) => { e.stopPropagation(); mostrarTeAmo(); });
+
+  /* tocar el cielo: estrellas fugaces */
+  cv.addEventListener('pointerdown', (e) => {
+    nuevaFugaz(e.clientX, e.clientY);
+    setTimeout(() => nuevaFugaz(e.clientX + 30, e.clientY - 20), 160);
+  });
+
+  /* ---------- poema que se escribe solo ---------- */
+  const caja = document.getElementById('poema');
+  const esperar = (ms) => new Promise(r => setTimeout(r, ms));
+
+  // si el poema crece demasiado, achica la letra para que siempre quepa
+  let esc = 1;
+  function ajustar() {
+    while (caja.getBoundingClientRect().top < H * 0.14 && esc > 0.55) {
+      esc -= 0.04;
+      caja.style.setProperty('--esc', esc.toFixed(2));
+    }
+  }
+
+  async function escribirPoema() {
+    for (const e of estrofas) {
+      const nodo = document.createElement('p');
+      nodo.className = 'estrofa' + (e.titulo ? ' titulo' : '');
+      nodo.style.whiteSpace = 'pre-line';
+      caja.appendChild(nodo);
+      const texto = e.lineas.join('\n');
+
+      if (sinMovimiento) {
+        nodo.textContent = texto;
+        ajustar();
+      } else {
+        for (let k = 1; k <= texto.length; k++) {
+          nodo.textContent = texto.slice(0, k);
+          ajustar();
+          await esperar(texto[k - 1] === '\n' ? 380 : 48);
+        }
+        await esperar(900);
+      }
+    }
+  }
+
+  /* ---------- bucle ---------- */
+  function bucle(t) {
+    moverMariposa(t);
+    pintar(t);
+    requestAnimationFrame(bucle);
+  }
+  requestAnimationFrame(bucle);
+})();
+</script>
+</body>
+</html>
